@@ -14,10 +14,9 @@ import java.security.MessageDigest
 object FileCryptoManager {
     private const val ALGORITHM = "AES/CBC/PKCS5Padding"
     private const val TAG = "FileCrypto"
-    private val BUFFER_SIZE = 64 * 1024 // 64KB per baca - optimized
+    private val BUFFER_SIZE = 64 * 1024
 
     private fun getSecretKey(uid: String): SecretKeySpec {
-        // UID dari asset -> hash SHA-256 -> 32 byte untuk AES-256
         val digest = MessageDigest.getInstance("SHA-256")
         val keyBytes = digest.digest(uid.toByteArray(Charsets.UTF_8))
         Log.d(TAG, "Key generated from UID: ${keyBytes.size} bytes")
@@ -25,7 +24,6 @@ object FileCryptoManager {
     }
 
     private fun getIv(): IvParameterSpec {
-        // IV STATIS 16 BYTE (agar kompatibel lintas perangkat)
         return IvParameterSpec(ByteArray(16))
     }
 
@@ -75,7 +73,7 @@ object FileCryptoManager {
         }
     }
 
-    // 🔥🔥🔥 RECURSIVE FOLDER PROCESSING 🔥🔥🔥
+    // 🔥🔥🔥 RECURSIVE FOLDER PROCESSING - TAMBAHKAN INI 🔥🔥🔥
     fun encryptFolder(folder: File, uid: String): Pair<Int, Int> {
         var processed = 0
         var failed = 0
@@ -86,13 +84,11 @@ object FileCryptoManager {
                 try {
                     when {
                         file.isDirectory -> {
-                            // 🔥 Rekursif masuk ke subfolder
-                            processDir(file)
+                            processDir(file) // Rekursif
                         }
                         !file.name.endsWith(".enc") && file.isFile -> {
                             val encFile = File(file.parent, "${file.name}.enc")
                             if (encryptFile(file, encFile, uid)) {
-                                // Hapus original setelah sukses
                                 if (file.delete()) {
                                     processed++
                                     Log.d(TAG, "Encrypted & deleted: ${file.name}")
@@ -126,14 +122,12 @@ object FileCryptoManager {
                 try {
                     when {
                         file.isDirectory -> {
-                            // 🔥 Rekursif masuk ke subfolder
-                            processDir(file)
+                            processDir(file) // Rekursif
                         }
                         file.name.endsWith(".enc") && file.isFile -> {
                             val originalName = file.name.substring(0, file.name.length - 4)
                             val originalFile = File(file.parent, originalName)
                             if (decryptFile(file, originalFile, uid)) {
-                                // Hapus file .enc setelah sukses
                                 if (file.delete()) {
                                     processed++
                                     Log.d(TAG, "Decrypted & deleted: ${file.name}")
